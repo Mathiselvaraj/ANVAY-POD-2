@@ -53,17 +53,26 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("http://localhost:*",
+
+        // Origins look correct
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
                 "http://127.0.0.1:*",
-                "https://anvay-frontend.onrender.com"));
-        config.setAllowedHeaders(List.of("*"));
+                "https://anvay-frontend.onrender.com"
+        ));
+
+        // CRITICAL: Add these lines to satisfy the preflight request
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
+
         config.setAllowCredentials(true);
+        // Optional but helpful: How long the browser should cache this CORS response (1 hour)
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
