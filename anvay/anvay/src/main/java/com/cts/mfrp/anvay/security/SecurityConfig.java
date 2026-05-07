@@ -30,22 +30,32 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/institutions/active").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN")
-                .anyRequest().authenticated()
-            )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // 1. Public Endpoints (No authentication required)
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/institutions/active").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+
+                        // 2. Super Admin Specific Routes
+                        .requestMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN")
+
+                        // 3. Institution Admin Specific Routes (Clubs, Events, etc.)
+                        // Using hasAnyRole allows flexibility if you add more admin types later
+                        .requestMatchers("/api/clubs/**").hasRole("INSTITUTION_ADMIN")
+                        .requestMatchers("/api/institution-admin/**").hasRole("INSTITUTION_ADMIN")
+
+                        // 4. Fallback for any other authenticated request
+                        .anyRequest().authenticated()
+                )
+                // Set the custom provider and the JWT filter
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
