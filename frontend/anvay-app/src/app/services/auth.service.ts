@@ -5,7 +5,7 @@ import { LoginRequest, LoginResponse, RegisterInstitutionRequest, RegisterStuden
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly API_URL = '/api/auth';
+  private readonly API_URL = 'https://anvay-backend.onrender.com/api/auth';
   private readonly TOKEN_KEY = 'anvay_token';
   private readonly USER_KEY = 'anvay_user';
 
